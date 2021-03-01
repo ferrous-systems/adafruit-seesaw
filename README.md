@@ -1,4 +1,6 @@
-# Rust driver for the Adafruit SeeSaw
+# `adafruit-seesaw`
+
+Rust driver for the Adafruit SeeSaw
 
 # License
 
