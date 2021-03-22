@@ -5,15 +5,14 @@
 #![no_std]
 
 use ehal::blocking::{
-    delay::DelayUs,
+    // delay::DelayUs,
     i2c::{Read, Write},
 };
 use embedded_hal as ehal;
 
 // TODO: Some kind of shared-bus thing for sharing i2c?
-pub struct SeeSaw<I2C, DELAY> {
+pub struct SeeSaw<I2C> {
     pub i2c: I2C,
-    pub delay: DELAY,
     pub address: u8,
 }
 
@@ -34,10 +33,10 @@ const BUFFER_MAX: usize = 32;
 const PAYLOAD_MAX: usize = BUFFER_MAX - 2;
 const DEFAULT_DELAY_US: u32 = 125;
 
-impl<I2C, DELAY> SeeSaw<I2C, DELAY>
+impl<I2C> SeeSaw<I2C>
 where
     I2C: Read + Write,
-    DELAY: DelayUs<u32>,
+    // DELAY: DelayUs<u32>,
 {
     fn write(&mut self, base: u8, function: u8, buf: &[u8]) -> Result<(), Error> {
         if buf.len() > PAYLOAD_MAX {
@@ -57,9 +56,9 @@ where
             .map_err(|_| Error::I2c)
     }
 
-    fn read(&mut self, base: u8, function: u8, delay_us: u32, buf: &mut [u8]) -> Result<(), Error> {
+    fn read(&mut self, base: u8, function: u8, buf: &mut [u8]) -> Result<(), Error> {
         self.write(base, function, &[])?;
-        self.delay.delay_us(delay_us);
+        // self.delay.delay_us(delay_us);
         self.i2c.read(self.address, buf).map_err(|_| Error::I2c)
     }
 
@@ -69,7 +68,7 @@ where
         self.read(
             keypad::BASE,
             keypad::functions::COUNT,
-            500,
+            // 500,
             &mut buf,
         )?;
         Ok(buf[0])
@@ -106,7 +105,8 @@ where
     ///
     /// Additionally theres some shenanigans to convert the raw bufer to (key + event)
     pub fn keypad_read_raw(&mut self, buf: &mut [u8]) -> Result<(), Error> {
-        self.read(keypad::BASE, keypad::functions::FIFO, 1000, buf)
+        // self.read(keypad::BASE, keypad::functions::FIFO, 1000, buf)
+        self.read(keypad::BASE, keypad::functions::FIFO, buf)
     }
 
     pub fn neopixel_set_pin(&mut self, pin: u8) -> Result<(), Error> {
@@ -172,21 +172,21 @@ where
 
     pub fn status_get_hwid(&mut self) -> Result<u8, Error> {
         let mut buf = [0u8; 1];
-        self.read(status::BASE, status::functions::HW_ID, DEFAULT_DELAY_US, &mut buf)
+        self.read(status::BASE, status::functions::HW_ID, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(buf[0])
     }
 
     pub fn status_get_version(&mut self) -> Result<u32, Error> {
         let mut buf = [0u8; 4];
-        self.read(status::BASE, status::functions::VERSION, DEFAULT_DELAY_US, &mut buf)
+        self.read(status::BASE, status::functions::VERSION, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(u32::from_be_bytes(buf))
     }
 
     pub fn status_get_options(&mut self) -> Result<u32, Error> {
         let mut buf = [0u8; 4];
-        self.read(status::BASE, status::functions::OPTIONS, DEFAULT_DELAY_US, &mut buf)
+        self.read(status::BASE, status::functions::OPTIONS, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(u32::from_be_bytes(buf))
     }
@@ -194,14 +194,15 @@ where
     // Get raw temperature. To convert to celcius, divide by (1 << 16)
     pub fn status_get_temp_raw(&mut self) -> Result<u32, Error> {
         let mut buf = [0u8; 4];
-        self.read(status::BASE, status::functions::TEMP, 1000, &mut buf)
+        // self.read(status::BASE, status::functions::TEMP, 1000, &mut buf)
+        self.read(status::BASE, status::functions::TEMP, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(u32::from_be_bytes(buf))
     }
 
-    pub fn delay_us(&mut self, us: u32) {
-        self.delay.delay_us(us);
-    }
+    // pub fn delay_us(&mut self, us: u32) {
+    //     self.delay.delay_us(us);
+    // }
 }
 
 pub mod status {
