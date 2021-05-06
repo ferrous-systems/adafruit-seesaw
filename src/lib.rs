@@ -3,6 +3,7 @@
 //! Totally untested so far
 
 #![no_std]
+use defmt::Format; // <- derive attribute
 
 use ehal::blocking::{
     // delay::DelayUs,
@@ -266,6 +267,7 @@ pub mod keypad {
     }
 
     #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[derive(Format)]
     pub struct KeyEvent {
         pub key: u8,
         pub event: Edge,
