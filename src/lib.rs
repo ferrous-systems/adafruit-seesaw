@@ -3,7 +3,7 @@
 //! Totally untested so far
 
 #![no_std]
-use defmt::Format; // <- derive attribute
+// use defmt::Format; // <- derive attribute
 
 use ehal::blocking::{
     // delay::DelayUs,
@@ -17,13 +17,13 @@ pub struct SeeSaw<I2C> {
     pub address: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Format)]
 pub enum Error {
     I2c,
     SeeSaw(SeeSawError),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Format)]
 pub enum SeeSawError {
     SizeError,
     InvalidArgument,
@@ -41,6 +41,7 @@ where
 {
     fn write(&mut self, base: u8, function: u8, buf: &[u8]) -> Result<(), Error> {
         if buf.len() > PAYLOAD_MAX {
+            defmt::info!("payload max!");
             return Err(Error::SeeSaw(SeeSawError::SizeError));
         }
 
@@ -60,7 +61,9 @@ where
     fn read(&mut self, base: u8, function: u8, buf: &mut [u8]) -> Result<(), Error> {
         self.write(base, function, &[])?;
         // self.delay.delay_us(delay_us);
-        self.i2c.read(self.address, buf).map_err(|_| Error::I2c)
+        let bla = self.i2c.read(self.address, buf).map_err(|_| Error::I2c);
+        defmt::info!("error: {}", bla );
+        bla
     }
 
     /// Get the count of pending key events on the keypad
@@ -254,6 +257,7 @@ pub mod neopixel {
     }
 }
 
+#[macro_use] extern crate defmt;
 pub mod keypad {
     pub const BASE: u8 = 0x10;
 
@@ -266,14 +270,13 @@ pub mod keypad {
         pub const FIFO: u8 = 0x10;
     }
 
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    #[derive(Format)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Format)]
     pub struct KeyEvent {
         pub key: u8,
         pub event: Edge,
     }
 
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Format)]
     #[repr(u8)]
     pub enum Edge {
         /// Indicates that the key is currently pressed
