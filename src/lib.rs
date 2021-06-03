@@ -7,7 +7,6 @@ use ehal::blocking::{
     i2c::{Read, Write},
 };
 use embedded_hal as ehal;
-use nrf52840_hal::Timer;
 
 pub struct SeeSaw<I2C> {
     pub i2c: I2C,
@@ -29,7 +28,6 @@ pub enum SeeSawError {
 
 const BUFFER_MAX: usize = 32;
 const PAYLOAD_MAX: usize = BUFFER_MAX - 2;
-const DEFAULT_DELAY_US: u32 = 125;
 
 impl<I2C> SeeSaw<I2C>
 where
