@@ -1,9 +1,6 @@
 //! Driver for the Adafruit Seesaw.
-//!
-//! Totally untested so far
 
 #![no_std]
-// use defmt::Format; // <- derive attribute
 
 use ehal::blocking::{
     delay::DelayUs,
@@ -12,7 +9,6 @@ use ehal::blocking::{
 use embedded_hal as ehal;
 use nrf52840_hal::Timer;
 
-// TODO: Some kind of shared-bus thing for sharing i2c?
 pub struct SeeSaw<I2C> {
     pub i2c: I2C,
     pub address: u8,
@@ -38,7 +34,7 @@ const DEFAULT_DELAY_US: u32 = 125;
 impl<I2C> SeeSaw<I2C>
 where
     I2C: Read + Write,
-    // DELAY: Timer<u32>,
+
 {
     fn write(&mut self, base: u8, function: u8, buf: &[u8]) -> Result<(), Error> {
         if buf.len() > PAYLOAD_MAX {
@@ -61,10 +57,8 @@ where
 
     fn read<DELAY: DelayUs<u32>>(&mut self, base: u8, function: u8, delay: &mut DELAY, buf: &mut [u8]) -> Result<(), Error> {
         self.write(base, function, &[])?;
-        delay.delay_us(14000); //timer??
-        let bla = self.i2c.read(self.address, buf).map_err(|_| Error::I2c);
-        // defmt::info!("error: {}", bla );
-        bla
+        delay.delay_us(14000);
+        self.i2c.read(self.address, buf).map_err(|_| Error::I2c)
     }
 
     /// Get the count of pending key events on the keypad
@@ -111,7 +105,6 @@ where
     /// Additionally theres some shenanigans to convert the raw bufer to (key + event)
     pub fn keypad_read_raw<DELAY: DelayUs<u32>>(&mut self, buf: &mut [u8], delay: &mut DELAY) -> Result<(), Error> {
         self.read(keypad::BASE, keypad::functions::FIFO, delay, buf)
-        // self.read(keypad::BASE, keypad::functions::FIFO, buf)
     }
 
     pub fn neopixel_set_pin(&mut self, pin: u8) -> Result<(), Error> {
@@ -177,7 +170,6 @@ where
 
     pub fn status_get_hwid<DELAY: DelayUs<u32>>(&mut self, delay: &mut DELAY) -> Result<u8, Error> {
         let mut buf = [0u8; 1];
-        // self.read(status::BASE, status::functions::HW_ID, &mut buf)
         self.read(status::BASE, status::functions::HW_ID, delay, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(buf[0])
@@ -185,7 +177,6 @@ where
 
     pub fn status_get_version<DELAY: DelayUs<u32>>(&mut self, delay: &mut DELAY) -> Result<u32, Error> {
         let mut buf = [0u8; 4];
-        // self.read(status::BASE, status::functions::VERSION, &mut buf)
         self.read(status::BASE, status::functions::VERSION, delay, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(u32::from_be_bytes(buf))
@@ -193,7 +184,6 @@ where
 
     pub fn status_get_options<DELAY: DelayUs<u32>>(&mut self, delay: &mut DELAY) -> Result<u32, Error> {
         let mut buf = [0u8; 4];
-        // self.read(status::BASE, status::functions::OPTIONS, &mut buf)
         self.read(status::BASE, status::functions::OPTIONS, delay, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(u32::from_be_bytes(buf))
@@ -203,16 +193,9 @@ where
     pub fn status_get_temp_raw<DELAY: DelayUs<u32>>(&mut self, delay: &mut DELAY) -> Result<u32, Error> {
         let mut buf = [0u8; 4];
         self.read(status::BASE, status::functions::TEMP, delay, &mut buf)
-        // self.read(status::BASE, status::functions::TEMP, &mut buf)
             .map_err(|_| Error::I2c)?;
         Ok(u32::from_be_bytes(buf))
     }
-
-    // das muss irgendwie anders
-    // pub fn delay_us(&mut self, us: u32) {
-    //     // was muss hier hin???
-    //     delay.delay.delay_us(us);
-    // }
 }
 
 pub mod status {
