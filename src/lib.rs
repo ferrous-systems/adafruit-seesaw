@@ -61,7 +61,7 @@ where
 
     fn read<DELAY: DelayUs<u32>>(&mut self, base: u8, function: u8, delay: &mut DELAY, buf: &mut [u8]) -> Result<(), Error> {
         self.write(base, function, &[])?;
-        delay.delay_us(14000); //timer??
+        delay.delay_us(10000); //timer??
         let bla = self.i2c.read(self.address, buf).map_err(|_| Error::I2c);
         // defmt::info!("error: {}", bla );
         bla
